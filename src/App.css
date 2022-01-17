@@ -6,3 +6,13 @@ body {
 *:focus {
   outline: none;
 }
+
+.act-as-link {
+  cursor: pointer;
+  font-weight: bolder;
+  font-size: x-large;
+}
+
+.fill-it {
+  width: 100%
+}
