@@ -29,9 +29,9 @@ export default function TopNavbar({user}){
     </Navbar.Group>);
 
     const LoginFalseMenuButton = (<Navbar.Group align={Alignment.RIGHT}>
-        <Button icon={"log-in"} className={"bp3-minimal"} text={"Login"} onClick={()=>history.push('/')}/>
+        <Button icon={"log-in"} minimal text={"Login"} onClick={()=>history.push('/')}/>
         <NavbarDivider/>
-        <Button icon={"new-person"} className={"bp3-minimal"} text={"Signup"} onClick={()=>history.push('/signup')}/>
+        <Button icon={"new-person"} minimal text={"Signup"} onClick={()=>history.push('/signup')}/>
     </Navbar.Group>);
 
     return(

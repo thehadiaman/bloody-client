@@ -16,3 +16,17 @@ body {
 .fill-it {
   width: 100%
 }
+
+.link {
+  color: white;
+  text-decoration: none;
+}
+
+.link:hover {
+  color: #079494;
+  text-decoration: none;
+}
+
+.link-right-side {
+  float: right;
+}

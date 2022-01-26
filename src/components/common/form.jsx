@@ -5,11 +5,12 @@ import { Tooltip2 } from "@blueprintjs/popover2";
 import {FormHelperText, Grid} from "@mui/material";
 import CountryCode from "./country-code";
 
-export default function Form({inputsData, schema, submitFunction, title, submitBtn}){
+export default function Form({inputsData, schema, submitFunction, title, submitBtn, links}){
     const [data, setData] = useState({});
     const [inputs, setInputs] = useState([]);
     const [focus, setFocus] = useState(null);
-    const [showPassword, setShowPassword] = useState(null);
+    const [showPasswordNames, setShowPasswordNames] = useState([]);
+
     useEffect(()=>{
         function makeInput(){
             setInputs(inputsData);
@@ -17,8 +18,12 @@ export default function Form({inputsData, schema, submitFunction, title, submitB
         makeInput();
     }, [inputsData])
 
-    const handleEyeClick = ()=>{
-        setShowPassword(!showPassword)
+    const handleEyeClick = (name)=>{
+        const copyOfShowPasswordNames = [...showPasswordNames];
+        const index = copyOfShowPasswordNames.indexOf(name)
+        if(copyOfShowPasswordNames.includes(name)) copyOfShowPasswordNames.splice(index, 1)
+        else copyOfShowPasswordNames.push(name)
+        setShowPasswordNames(copyOfShowPasswordNames)
     }
 
     const selectDialCode = (code, country) => {
@@ -27,16 +32,16 @@ export default function Form({inputsData, schema, submitFunction, title, submitB
         setData(data);
     }
 
-    const eyeButton = (
-        <Tooltip2 content={`${showPassword ? "Hide" : "Show"} Password`} position={"right"}>
+    const eyeButton = (name) => {
+        return <Tooltip2 content={`${showPasswordNames.includes(name) ? "Hide" : "Show"} Password`} position={"right"}>
             <Button
-                icon={showPassword ? "eye-open" : "eye-off"}
-                intent={showPassword? Intent.WARNING: Intent.SUCCESS}
+                icon={showPasswordNames.includes(name) ? "unlock" : "lock"}
+                intent={showPasswordNames.includes(name) ? Intent.WARNING : Intent.SUCCESS}
                 minimal={true}
-                onClick={handleEyeClick}
+                onClick={()=>handleEyeClick(name)}
             />
         </Tooltip2>
-    );
+    }
 
     const handleChange = ({ name, value })=>{
         const copyOfInputs = [...inputs];
@@ -53,21 +58,40 @@ export default function Form({inputsData, schema, submitFunction, title, submitB
         return Joi.validate(data, schema, {abortEarly: false})
     }
 
+    const setError = (error) => {
+        const copyOfInputs = [...inputs];
+        for(let item of error.details){
+            const input = copyOfInputs.find(input=>input.name===item.path[0]);
+            input.error = item.message;
+            const index = copyOfInputs.indexOf(input);
+            console.log(input)
+            copyOfInputs[index] = input;
+        }
+        setInputs(copyOfInputs);
+    }
+
     const handleSubmit = (e)=>{
         e.preventDefault()
         const {error} = validate();
         if(error){
-            const copyOfInputs = [...inputs];
-            for(let item of error.details){
-                const input = copyOfInputs.find(input=>input.name===item.path[0]);
-                input.error = item.message;
-                const index = copyOfInputs.indexOf(input);
-                copyOfInputs[index] = input;
-            }
-            setInputs(copyOfInputs);
+            setError(error)
         }else{
             submitFunction(data)
         }
+    }
+
+    const actionValidation = (name, schema, action)=>{
+        const inputValue = {[name]: data[name]}
+        const {error} =  Joi.validate(inputValue, schema)
+        if(error){
+            setError(error)
+            return;
+        }
+        action(data[name])
+    }
+
+    const inputAction = (name, text, schema, action)=>{
+        return <Button onClick={()=>actionValidation(name, schema, action)}>OTP</Button>
     }
 
     return <Grid container columnSpacing={{lg: 12, md: 12, sm: 12, xs: 12}}>
@@ -86,14 +110,15 @@ export default function Form({inputsData, schema, submitFunction, title, submitB
                             leftElement={<Icon icon={input.icon}/>}
                             onChange={({target}) => handleChange(target)}
                             placeholder={input.placeholder}
-                            rightElement={input.type === "password" && eyeButton}
-                            type={showPassword ? "text" : (input.type === "password" ? "password" : input.type)}
+                            rightElement={(input.type === "password" ? eyeButton(input.name): (input.action ? inputAction(input.name, input.actionText, input.actionValidationSchema, input.action): null))}
+                            type={showPasswordNames.includes(input.name) ? "text" : (input.type === "password" ? "password" : input.type)}
                         />}
                         {input.error&&<FormHelperText style={{color: 'red'}}>{input.error}</FormHelperText>}
                         <br/>
                     </div>)
                 }
                 <Button intent={"success"} rightIcon={"arrow-right"} text={submitBtn} type={"submit"} />
+                {links&&<div className={"link-right-side"}>{links}</div>}
             </form>
         </Grid>
         <Grid item lg={3} md={3} sm={2} xs={0}/>
